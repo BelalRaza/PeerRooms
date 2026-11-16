@@ -1,0 +1,9 @@
+stateDiagram-v2
+    direction LR
+    [*] --> PENDING: Sender sends
+    PENDING --> ACCEPTED: Receiver accepts
+    PENDING --> REJECTED: Receiver rejects
+    PENDING --> CANCELLED: Sender cancels
+    ACCEPTED --> [*]
+    REJECTED --> [*]
+    CANCELLED --> [*]

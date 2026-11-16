@@ -1,0 +1,35 @@
+sequenceDiagram
+    actor Student
+    participant API as FastAPI route
+    participant Facade as PeerRoomsApp
+    participant S as RoomService
+    participant Repo as RoomRepository
+    participant Room
+    participant State as RoomState
+    participant Bus as EventBus
+    participant Inbox as NotificationService
+    Student->>API: POST /api/rooms/{room_id}/join
+    API->>Facade: join_room(student_id, room_id)
+    Facade->>S: join_room(student_id, room_id)
+    Note over S: Validate student
+    S->>S: Acquire room lock
+    S->>Repo: get(room_id)
+    Repo-->>S: Room snapshot
+    S->>Room: join(student_id, now)
+    Note over Room: Reject an existing seat or place in queue
+    Room->>State: join(room, student_id, now)
+    alt OpenState
+        State->>Room: Seat student and mark FULL if needed
+    else FullState
+        State->>Room: Add to FIFO queue
+    else ClosedState
+        State-->>Room: Raise RoomClosedError
+    end
+    State-->>S: JoinOutcome on success
+    S->>Repo: save(room)
+    S->>S: Release lock
+    S->>Bus: StudentJoined or StudentWaitlisted
+    Bus->>Inbox: Notify the host at the time of the join
+    S-->>Facade: JoinOutcome
+    Facade-->>API: JoinView
+    API-->>Student: JOINED or WAITLISTED with position

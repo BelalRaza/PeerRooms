@@ -1,0 +1,28 @@
+sequenceDiagram
+    actor A as Sender
+    actor B as Receiver
+    participant F as FastAPI and facade
+    participant Service as ConnectionService
+    participant Requests as ConnectionRequestRepository
+    participant Edges as ConnectionRepository
+    participant Bus as EventBus
+    participant Inbox as NotificationService
+    A->>F: Send request
+    F->>Service: send_request(A, B)
+    Service->>Service: Acquire graph lock and validate pair
+    Service->>Edges: are_connected(A, B)
+    Service->>Requests: pending_between(A, B)
+    Service->>Requests: save(PENDING)
+    Service->>Service: Release graph lock
+    Service->>Bus: ConnectionRequested
+    Bus->>Inbox: Notify B
+    B->>F: Accept request
+    F->>Service: accept(request_id, B)
+    Service->>Service: Acquire graph lock
+    Service->>Requests: get(request_id)
+    Service->>Service: Validate receiver, PENDING, and blocks
+    Service->>Requests: save(ACCEPTED)
+    Service->>Edges: save(Connection of A and B)
+    Service->>Service: Release graph lock
+    Service->>Bus: ConnectionAccepted
+    Bus->>Inbox: Notify A

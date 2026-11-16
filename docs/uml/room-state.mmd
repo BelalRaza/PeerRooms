@@ -1,0 +1,14 @@
+stateDiagram-v2
+    direction TB
+    OPEN: OPEN
+    OPEN: Available seats
+    FULL: FULL
+    FULL: New joins wait in FIFO order
+    CLOSED: CLOSED
+    CLOSED: No active seats or queue
+    [*] --> OPEN: Host takes seat 1
+    OPEN --> FULL: Last seat filled
+    FULL --> OPEN: Seat freed with empty queue
+    OPEN --> CLOSED: Host closes or last seat leaves
+    FULL --> CLOSED: Host closes
+    CLOSED --> [*]

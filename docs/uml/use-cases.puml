@@ -1,0 +1,45 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam usecaseBackgroundColor #E7F1E9
+skinparam usecaseBorderColor #17664F
+skinparam defaultFontName Arial
+skinparam nodesep 24
+
+actor Host
+actor Student
+Host --|> Student
+
+rectangle PeerRooms {
+    usecase "Register and edit interests" as profile
+    usecase "Browse or create rooms\nread or post messages" as rooms
+    usecase "Join room" as join
+    usecase "Join waitlist" as queue
+    usecase "Leave room" as leave
+    usecase "Promote first in line" as promote
+    usecase "Transfer host" as transfer
+    usecase "Discover peers\nmanage requests and network" as network
+    usecase "Accept request" as accept
+    usecase "Create connection" as connect
+    usecase "Notify sender" as notify
+    usecase "Remove member\nor close room" as moderate
+}
+
+actor System
+Student --> profile
+Student --> rooms
+Student --> join
+Student --> leave
+Student --> network
+Student --> accept
+Host --> moderate
+queue .left.> join : <<extend>>
+leave .right.> promote : <<include>>
+leave .right.> transfer : <<include>>
+accept .right.> connect : <<include>>
+accept .right.> notify : <<include>>
+System -left-> promote
+System -left-> transfer
+System -left-> notify
+@enduml

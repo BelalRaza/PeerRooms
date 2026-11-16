@@ -1,0 +1,19 @@
+flowchart TB
+    Browser["Browser · HTML / CSS / JavaScript"]
+    HTTP["FastAPI routes and Pydantic schemas"]
+    Error["Exception handler"]
+    Facade["PeerRoomsApp · frozen views"]
+    Services["Student · Room · Connection · Discovery · Notification"]
+    Domain["Entities · room states · value objects · events"]
+    Ports["Repository · EventPublisher · EventListener · Clock"]
+    Adapters["In-memory repositories · EventBus · clocks"]
+    Bootstrap["build_app() · one composition root"]
+
+    Browser -->|"JSON + X-Student-Id"| HTTP
+    HTTP -->|"one use case per route"| Facade
+    HTTP -.->|"PeerRoomsError"| Error
+    Facade --> Services
+    Services --> Domain
+    Services --> Ports
+    Adapters -.->|"implements"| Ports
+    Bootstrap -.->|"injects dependencies"| Facade

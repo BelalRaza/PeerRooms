@@ -1,0 +1,36 @@
+sequenceDiagram
+    actor Student as Leaving student
+    participant API as FastAPI route
+    participant F as PeerRoomsApp
+    participant S as RoomService
+    participant R as Room
+    participant State as RoomState
+    participant Bus as EventBus
+    participant Inbox as NotificationService
+    Student->>API: POST /api/rooms/{room_id}/leave
+    API->>F: leave_room(student_id, room_id)
+    F->>S: leave_room(student_id, room_id)
+    S->>S: Acquire room lock and load snapshot
+    S->>R: leave(student_id, now)
+    alt On waitlist
+        R->>R: Remove queue entry
+    else Seated
+        R->>State: leave(room, student_id, now)
+        State->>R: Remove membership
+        opt FULL with a queue
+            State->>R: Promote first waiting student
+        end
+        opt Departing host and others remain
+            State->>R: Transfer host to earliest joined_at
+        end
+        opt Last seated student leaves
+            State->>R: Switch to CLOSED
+        end
+    end
+    R-->>S: LeaveResult
+    S->>S: Save and release lock
+    S->>Bus: StudentLeft and applicable outcome events
+    Bus->>Inbox: Notify promoted student or new host
+    S-->>F: LeaveResult
+    F-->>API: LeaveView
+    API-->>Student: 200

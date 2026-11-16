@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f3">
+  <title>PeerRooms</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="/" aria-label="PeerRooms home"><span class="brand-mark" aria-hidden="true"></span>PeerRooms</a>
+      <div id="account" class="account" hidden>
+        <span id="account-name"></span>
+        <button id="notification-button" class="button quiet notification-button" type="button"
+                aria-label="Notifications" aria-controls="notification-panel" aria-expanded="false">
+          <span class="bell" aria-hidden="true"></span><span class="notification-label">Notifications</span>
+          <span class="count" id="unread-count" hidden></span>
+        </button>
+        <button id="sign-out" class="button outline" type="button">Sign out</button>
+        <aside id="notification-panel" class="notification-panel surface" aria-label="Notifications" hidden>
+          <h2>Notifications</h2>
+          <div id="inbox-list"></div>
+        </aside>
+      </div>
+    </div>
+  </header>
+
+  <section id="auth-screen" class="wrap auth" aria-label="Access PeerRooms" hidden>
+    <div class="auth-intro">
+      <h1>Find your people on campus.</h1>
+      <p>Join a small discussion room, meet students who share your interests, and keep in touch.</p>
+    </div>
+    <div class="auth-card surface">
+      <div class="auth-tabs" aria-label="Account options">
+        <button type="button" class="tab" data-auth-mode="sign-in" aria-pressed="true">Sign in</button>
+        <button type="button" class="tab" data-auth-mode="register" aria-pressed="false">Register</button>
+      </div>
+      <form id="sign-in-form" class="form-stack">
+        <label for="sign-in-email">College email</label>
+        <input id="sign-in-email" name="email" type="email" autocomplete="email" required placeholder="you@college.edu">
+        <button class="button primary" type="submit">Sign in</button>
+      </form>
+      <form id="register-form" class="form-stack" hidden>
+        <label for="register-name">Full name</label>
+        <input id="register-name" name="name" autocomplete="name" required>
+        <label for="register-email">College email</label>
+        <input id="register-email" name="email" type="email" autocomplete="email" required>
+        <div class="form-row">
+          <div class="field"><label for="register-department">Department</label>
+            <input id="register-department" name="department" required></div>
+          <div class="field"><label for="register-year">Year</label>
+            <input id="register-year" name="year" type="number" min="1" step="1" required></div>
+        </div>
+        <label for="register-interests">Interests</label>
+        <div class="chip-field" data-chips="register">
+          <div class="chips"></div>
+          <input id="register-interests" autocomplete="off" placeholder="e.g. AI, football" aria-describedby="register-interest-help">
+        </div>
+        <p class="hint" id="register-interest-help">Add 1–10 interests. Press Enter or use commas.</p>
+        <button class="button primary" type="submit">Create account</button>
+      </form>
+    </div>
+  </section>
+
+  <main id="app-screen" class="wrap workspace" hidden>
+    <nav class="navigation" aria-label="Main navigation">
+      <button class="nav-link" type="button" data-page="rooms">Rooms</button>
+      <button class="nav-link" type="button" data-page="discover">Discover</button>
+      <button class="nav-link" type="button" data-page="network">Network</button>
+      <button class="nav-link" type="button" data-page="profile">Profile</button>
+    </nav>
+
+    <section id="rooms" class="page" hidden>
+      <div class="page-heading">
+        <div><h1>Rooms</h1><p>Find a focused discussion or start one of your own.</p></div>
+        <button id="create-room-toggle" class="button primary" type="button" aria-controls="create-room-panel" aria-expanded="false">Create room</button>
+      </div>
+      <div id="create-room-panel" class="surface form-panel" hidden>
+        <h2>Create a room</h2>
+        <form id="create-room-form" class="form-stack">
+          <label for="room-topic">Topic</label>
+          <input id="room-topic" name="topic" required placeholder="What are you discussing?">
+          <label for="room-prompt-input">Discussion prompt</label>
+          <textarea id="room-prompt-input" name="prompt" rows="3" required placeholder="Give your group a place to start."></textarea>
+          <div class="form-row">
+            <div class="field"><label for="room-type">Room type</label>
+              <select id="room-type" name="room_type">
+                <option value="QUICK_CHAT" data-range="2–4">Quick chat</option>
+                <option value="DISCUSSION" data-range="4–8">Discussion</option>
+                <option value="PANEL" data-range="8–20">Panel</option>
+              </select></div>
+            <div class="field"><label for="room-capacity">Seat capacity</label>
+              <input id="room-capacity" name="capacity" type="number" step="1" placeholder="4" aria-describedby="capacity-hint"></div>
+          </div>
+          <p id="capacity-hint" class="hint">Quick chat allows 2–4 seats. Default 4.</p>
+          <label for="room-tags">Tags</label>
+          <div class="chip-field" data-chips="room">
+            <div class="chips"></div>
+            <input id="room-tags" autocomplete="off" placeholder="e.g. careers, design" aria-describedby="room-tag-help">
+          </div>
+          <p id="room-tag-help" class="hint">Add a tag with Enter or a comma.</p>
+          <div class="actions">
+            <button class="button primary" type="submit">Create and open room</button>
+            <button id="create-room-cancel" class="button quiet" type="button">Cancel</button>
+          </div>
+        </form>
+      </div>
+      <section class="room-section" aria-labelledby="recommend-heading">
+        <h2 id="recommend-heading">Recommended for you</h2>
+        <div id="recommended-list" class="room-grid"></div>
+      </section>
+      <section class="room-section" aria-labelledby="browse-heading">
+        <div class="section-heading">
+          <h2 id="browse-heading">Browse rooms</h2>
+          <form id="room-filters" class="filters" role="search" aria-label="Filter rooms">
+            <label class="sr-only" for="tag-filter">Filter by tag</label>
+            <input id="tag-filter" name="tag" type="search" placeholder="Filter by tag">
+            <label class="sr-only" for="status-filter">Filter by status</label>
+            <select id="status-filter" name="status">
+              <option value="">Active rooms</option>
+              <option value="OPEN">Open</option>
+              <option value="FULL">Full</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+            <button class="button outline" type="submit">Filter</button>
+          </form>
+        </div>
+        <div id="room-list" class="room-grid"></div>
+      </section>
+    </section>
+
+    <section id="room-detail" class="page" hidden>
+      <button class="button quiet back" type="button" data-page="rooms">← All rooms</button>
+      <p id="room-loading" class="empty">Loading room…</p>
+      <div id="room-body" hidden>
+        <article class="surface room-hero">
+          <div id="room-meta" class="room-meta"></div>
+          <h1 id="room-title"></h1>
+          <p id="room-prompt"></p>
+          <div id="room-tags-view" class="chips"></div>
+          <div class="section-heading room-controls">
+            <p id="room-position" role="status"></p>
+            <div id="room-actions" class="actions"></div>
+          </div>
+        </article>
+        <div class="room-layout">
+          <article class="surface discussion">
+            <h2>Discussion</h2>
+            <div id="message-list" class="message-list" aria-label="Recent room messages"></div>
+            <form id="message-form" class="form-stack">
+              <label for="message-content">Message</label>
+              <textarea id="message-content" name="content" rows="2" required aria-describedby="message-help"></textarea>
+              <div class="section-heading">
+                <p id="message-help" class="hint"></p>
+                <button class="button primary" type="submit">Send message</button>
+              </div>
+            </form>
+          </article>
+          <aside class="room-sidebar">
+            <section class="surface side-panel"><h2>Seated members</h2><div id="member-list"></div></section>
+            <section class="surface side-panel"><h2>Waitlist</h2><div id="waitlist"></div></section>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section id="discover" class="page" hidden>
+      <div class="page-heading">
+        <div><h1>Discover peers</h1><p>Meet students with shared interests or room history.</p></div>
+        <div class="field"><label for="strategy">Matching strategy</label>
+          <select id="strategy"><option value="weighted">Weighted</option><option value="jaccard">Jaccard</option></select></div>
+      </div>
+      <div id="peer-list" class="room-grid"></div>
+    </section>
+
+    <section id="network" class="page" hidden>
+      <div class="page-heading"><div><h1>Network</h1><p>Manage requests and see your connections.</p></div></div>
+      <div class="network-grid">
+        <section class="surface side-panel"><h2>Incoming requests</h2><div id="incoming-list"></div></section>
+        <section class="surface side-panel"><h2>Sent requests</h2><div id="outgoing-list"></div></section>
+      </div>
+      <section class="surface side-panel connections"><h2>My connections</h2><div id="connection-list"></div></section>
+    </section>
+
+    <section id="profile" class="page" hidden>
+      <div class="page-heading"><h1>Profile</h1></div>
+      <div class="surface form-panel">
+        <h2 id="profile-name"></h2><p id="profile-meta" class="muted"></p>
+        <form id="interest-form" class="form-stack">
+          <label for="profile-interests">Interests</label>
+          <div class="chip-field" data-chips="profile">
+            <div class="chips"></div>
+            <input id="profile-interests" autocomplete="off" aria-describedby="profile-interest-help">
+          </div>
+          <p class="hint" id="profile-interest-help">Your interests shape room and peer suggestions. Press Enter or use commas.</p>
+          <button class="button primary" type="submit">Save interests</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap footer"><a href="/docs" target="_blank" rel="noopener">API documentation ↗</a></footer>
+  <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
+</body>
+</html>

@@ -1,0 +1,117 @@
+classDiagram
+    direction LR
+    class PeerRoomsApp {
+        <<facade>>
+    }
+    class StudentService
+    class RoomService {
+        -dict room_locks
+        +create_room()
+        +join_room()
+        +leave_room()
+        +remove_member()
+        +close_room()
+        +post_message()
+        +list_rooms()
+        +room_detail()
+    }
+    class ConnectionService
+    class DiscoveryService {
+        +suggest_peers(student_id, limit, strategy)
+        +recommend_rooms(student_id, limit)
+    }
+    class NotificationService
+    class StudentRepository {
+        <<interface>>
+        +save(student)
+        +get(student_id)
+        +find_by_email(email)
+        +all()
+    }
+    class RoomRepository {
+        <<interface>>
+        +save(room)
+        +get(room_id)
+        +all()
+        +rooms_of(student_id)
+    }
+    class ConnectionRequestRepository {
+        <<interface>>
+        +save(request)
+        +get(request_id)
+        +pending_between(a_id, b_id)
+        +pending_for(student_id)
+    }
+    class ConnectionRepository {
+        <<interface>>
+        +save(connection)
+        +are_connected(a_id, b_id)
+        +connections_of(student_id)
+    }
+    class NotificationRepository {
+        <<interface>>
+        +save(notification)
+        +get(notification_id)
+        +for_student(student_id)
+    }
+    class EventPublisher {
+        <<interface>>
+        +publish(event)
+    }
+    class EventListener {
+        <<interface>>
+        +handle(event)
+    }
+    class EventBus {
+        +subscribe(event_type, listener)
+        +publish(event)
+    }
+    class Clock {
+        <<interface>>
+        +now()
+    }
+    class RoomFactory
+    class RoomTypeConfig
+    class MatchingStrategy {
+        <<interface>>
+        +score(me, other) float
+    }
+    class JaccardInterestStrategy
+    class SharedRoomsStrategy
+    class WeightedStrategy
+
+    PeerRoomsApp --> StudentService
+    PeerRoomsApp --> RoomService
+    PeerRoomsApp --> ConnectionService
+    PeerRoomsApp --> DiscoveryService
+    PeerRoomsApp --> NotificationService
+    PeerRoomsApp --> MatchingStrategy : registry
+    StudentService --> StudentRepository
+    RoomService --> StudentRepository
+    RoomService --> RoomRepository
+    RoomService --> RoomFactory
+    RoomService --> Clock
+    RoomService --> EventPublisher
+    RoomFactory o-- RoomTypeConfig
+    ConnectionService --> StudentRepository
+    ConnectionService --> ConnectionRequestRepository
+    ConnectionService --> ConnectionRepository
+    ConnectionService --> Clock
+    ConnectionService --> EventPublisher
+    DiscoveryService --> StudentRepository
+    DiscoveryService --> RoomRepository
+    DiscoveryService --> ConnectionRepository
+    DiscoveryService --> ConnectionRequestRepository
+    DiscoveryService --> MatchingStrategy
+    NotificationService --> NotificationRepository
+    NotificationService --> StudentRepository
+    NotificationService --> RoomRepository
+    NotificationService --> Clock
+    EventPublisher <|.. EventBus
+    EventListener <|.. NotificationService
+    EventBus o-- EventListener
+    MatchingStrategy <|-- JaccardInterestStrategy
+    MatchingStrategy <|-- SharedRoomsStrategy
+    MatchingStrategy <|-- WeightedStrategy
+    SharedRoomsStrategy --> RoomRepository
+    WeightedStrategy o-- MatchingStrategy : weighted parts

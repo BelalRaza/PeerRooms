@@ -1,0 +1,117 @@
+classDiagram
+    direction TB
+    class Student {
+        +str id
+        +str name
+        +str email
+        +str department
+        +int year
+        +frozenset interests
+        +replace_interests(interests)
+        +add_interest(interest)
+        +remove_interest(interest)
+        +common_interests(other)
+        +block(other_id)
+        +blocks(other_id) bool
+    }
+    class Interest {
+        <<value object>>
+        +str name
+        +of(raw) Interest
+    }
+    class Room {
+        +str id
+        +str topic
+        +str prompt
+        +frozenset tags
+        +RoomType room_type
+        +int capacity
+        +str host_id
+        +datetime created_at
+        -RoomState state
+        -list members
+        -deque waitlist
+        -set past_participants
+        -list messages
+        +join(student_id, now) JoinOutcome
+        +leave(student_id, now) LeaveResult
+        +remove_member(by_id, target_id, now) LeaveResult
+        +post_message(sender_id, content, now) Message
+        +close(by_id)
+        +is_member(student_id) bool
+        +is_full() bool
+        +status() RoomStatus
+    }
+    class RoomState {
+        <<abstract>>
+        +join(room, student_id, now) JoinOutcome
+        +leave(room, student_id, now) LeaveResult
+        +close(room)
+        +require_active(room)
+        +status() RoomStatus
+    }
+    class OpenState
+    class FullState
+    class ClosedState
+    class Membership {
+        +str student_id
+        +RoomRole role
+        +datetime joined_at
+    }
+    class Message {
+        +str id
+        +str room_id
+        +str sender_id
+        +str content
+        +datetime sent_at
+    }
+    class ConnectionRequest {
+        +str id
+        +str sender_id
+        +str receiver_id
+        +RequestStatus status
+        +datetime created_at
+        +datetime responded_at
+        +accept(by_id, now)
+        +reject(by_id, now)
+        +cancel(by_id, now)
+    }
+    class Connection {
+        +str id
+        +frozenset student_ids
+        +datetime connected_at
+        +other(student_id) str
+    }
+    class Notification {
+        +str id
+        +str recipient_id
+        +NotificationType type
+        +str text
+        +datetime created_at
+        +bool is_read
+        +mark_read()
+    }
+    class JoinOutcome {
+        +JoinResult result
+        +int position
+    }
+    class LeaveResult {
+        +str promoted_id
+        +str new_host_id
+        +bool closed
+    }
+    RoomState <|-- OpenState
+    RoomState <|-- FullState
+    RoomState <|-- ClosedState
+    Room --> RoomState : delegates to
+    Room "1" *-- "0..capacity" Membership : seats
+    Room "1" *-- "0..*" Message : owns
+    Room "1" o-- "1..*" Interest : tags
+    Student "1" o-- "1..10" Interest : interests
+    Student "1" -- "0..*" Membership : seated as
+    ConnectionRequest "0..*" --> "1" Student : sender
+    ConnectionRequest "0..*" --> "1" Student : receiver
+    Connection "0..*" --> "2" Student : links
+    Notification "0..*" --> "1" Student : recipient
+    Room ..> JoinOutcome
+    Room ..> LeaveResult
